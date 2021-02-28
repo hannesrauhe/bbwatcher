@@ -60,13 +60,12 @@ def main():
 
     try:
       result = handle.interruptRead(endpoint.address, endpoint.maxPacketSize)
-    except Exception:
-      # Sometimes this fails. Unsure why.
-      pass
-    if result[0]!=last_event:
-      state_change(ButtonState(last_event), ButtonState(result[0]))
-      last_event = result[0]
-    time.sleep(endpoint.interval / float(1000))
+      if result[0]!=last_event:
+        state_change(ButtonState(last_event), ButtonState(result[0]))
+        last_event = result[0]
+      time.sleep(endpoint.interval / float(1000))
+    except Exception as e:
+      print(e, result) # result is int sometimes?
 
   handle.releaseInterface()
 
