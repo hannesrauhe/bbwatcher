@@ -1,0 +1,12 @@
+[Unit]
+Description=A daemon that watches the big red button and executes events
+After=syslog.target network.target remote-fs.target nss-lookup.target
+
+[Service]
+Type=simple
+PIDFile=/run/bigbuttonwatcher.pid
+ExecStart=/usr/bin/bigbuttonwatcher
+ExecStop=/bin/kill -s QUIT $MAINPID
+
+[Install]
+WantedBy=multi-user.target
