@@ -5,7 +5,7 @@ from enum import Enum
 
 idVendor = 0x1d34
 idProduct = 0x000d
-scriptDir = "./"
+scriptDir = "/etc/bbwatcher/events"
 
 class ButtonState(Enum):
   UNDEF=0
