@@ -5,6 +5,7 @@ from enum import Enum
 
 idVendor = 0x1d34
 idProduct = 0x000d
+scriptDir = "./"
 
 class ButtonState(Enum):
   UNDEF=0
@@ -20,15 +21,18 @@ def findButton():
   return None
 
 def state_change(last,new):
-  if new==ButtonState.PRESSED:
-    print("Button pressed")
-    subprocess.call("./button_pressed.sh")
-  elif last==ButtonState.LID_DOWN and new==ButtonState.LID_UP:
-    print("Lid opened")
-    subprocess.call("./lid_opened.sh")
-  elif last==ButtonState.LID_UP and new==ButtonState.LID_DOWN:
-    print("Lid closed")
-    subprocess.call("./lid_closed.sh")
+  try:
+    if new==ButtonState.PRESSED:
+      print("Button pressed")
+      subprocess.call(scriptDir+"/button_pressed.sh")
+    elif last==ButtonState.LID_DOWN and new==ButtonState.LID_UP:
+      print("Lid opened")
+      subprocess.call(scriptDir+"/lid_opened.sh")
+    elif last==ButtonState.LID_UP and new==ButtonState.LID_DOWN:
+      print("Lid closed")
+      subprocess.call(scriptDir+"/lid_closed.sh")
+  except Exception as e:
+    print("Executing script failed: ",e)
 
 def main():
   dev = findButton()
@@ -56,12 +60,12 @@ def main():
 
     try:
       result = handle.interruptRead(endpoint.address, endpoint.maxPacketSize)
-      if result[0]!=last_event:
-        state_change(ButtonState(last_event), ButtonState(result[0]))
-        last_event = result[0]
     except Exception:
       # Sometimes this fails. Unsure why.
       pass
+    if result[0]!=last_event:
+      state_change(ButtonState(last_event), ButtonState(result[0]))
+      last_event = result[0]
     time.sleep(endpoint.interval / float(1000))
 
   handle.releaseInterface()
