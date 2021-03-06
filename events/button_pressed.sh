@@ -1,3 +1,5 @@
 #!/bin/bash
 
-nohup bluealsa-aplay 00:00:00:00:00:00 > /dev/nullq 2> /dev/null < /dev/null &
+killall mplayer
+blink1-tool --rgb FF9900 -l1
+mplayer -playlist http://streaming.radio.co/s774887f7b/listen.m3u -really-quiet > /dev/null 2> /dev/null < /dev/null &
