@@ -1,0 +1,7 @@
+select distinct ?item ?itemLabel ?itemDescription ?sitelinks where {
+    ?item wdt:P31 wd:Q5;  # Any instance of a human.
+          wdt:P39 wd:Q40779;  #  Who held position consul
+    SERVICE wikibase:label { bd:serviceParam wikibase:language "en,nl" }
+}
+ORDER BY DESC(?sitelinks)
+
