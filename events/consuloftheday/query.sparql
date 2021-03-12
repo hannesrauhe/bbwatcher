@@ -1,8 +1,6 @@
 select distinct ?item ?itemLabel ?itemDescription ?image where {
     ?item wdt:P31 wd:Q5;  # Any instance of a human.
           wdt:P39 wd:Q40779;  #  Who held position consul
-          wdt:P18 ?image
+          OPTIONAL { ?item wdt:P18 ?image }
     SERVICE wikibase:label { bd:serviceParam wikibase:language "en" }
 }
-ORDER BY DESC(?item)
-
