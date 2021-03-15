@@ -9,8 +9,12 @@ if [ ! -f "$CONSUL_FILE" ] ; then
 fi
 
 NAME=$(jq ".results.bindings[${DAY}].itemLabel.value" $CONSUL_FILE)
-LINK=$(jq ".results.bindings[${DAY}].item.value" $CONSUL_FILE)
+LINK=$(jq ".results.bindings[${DAY}].article.value" $CONSUL_FILE)
+if [ -z "$LINK" ] ; then
+  LINK=$(jq ".results.bindings[${DAY}].item.value" $CONSUL_FILE)
+fi
 DESC=$(jq ".results.bindings[${DAY}].itemDescription.value" $CONSUL_FILE)
+IMAGE=$(jq ".results.bindings[${DAY}].image.value" $CONSUL_FILE)
 
 echo -n "The consul of the day is: "
 if [ -n "$USE_HTML" ] ; then
@@ -20,6 +24,7 @@ if [ -n "$USE_HTML" ] ; then
 elif [ -n "$USE_MD" ] ; then
   echo "[${NAME//\"/}](${LINK//\"/})"
 else
-  echo "${NAME//\"/} (${LINK//\"/}) - ${DESC//\"/}"
+  echo "${NAME//\"/} (${LINK//\"/})"
+#  echo "${NAME//\"/} (${LINK//\"/}) - ${DESC//\"/}"
 fi
 
