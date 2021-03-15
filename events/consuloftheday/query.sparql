@@ -1,6 +1,9 @@
-select distinct ?item ?itemLabel ?itemDescription ?image where {
+select distinct ?item ?itemLabel ?itemDescription ?image ?article where {
     ?item wdt:P31 wd:Q5;  # Any instance of a human.
           wdt:P39 wd:Q40779;  #  Who held position consul
-          OPTIONAL { ?item wdt:P18 ?image }
+      OPTIONAL { ?item wdt:P18 ?image .
+                 ?article schema:about ?item .
+                 ?article schema:isPartOf <https://en.wikipedia.org/>.
+                }
     SERVICE wikibase:label { bd:serviceParam wikibase:language "en" }
 }
