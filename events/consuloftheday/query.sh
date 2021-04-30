@@ -10,7 +10,7 @@ fi
 
 NAME=$(jq ".results.bindings[${DAY}].itemLabel.value" $CONSUL_FILE)
 LINK=$(jq ".results.bindings[${DAY}].article.value" $CONSUL_FILE)
-if [ -z "$LINK" ] ; then
+if [ "$LINK" = "null" ] ; then
   LINK=$(jq ".results.bindings[${DAY}].item.value" $CONSUL_FILE)
 fi
 DESC=$(jq ".results.bindings[${DAY}].itemDescription.value" $CONSUL_FILE)
