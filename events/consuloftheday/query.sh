@@ -16,6 +16,11 @@ fi
 DESC=$(jq ".results.bindings[${DAY}].itemDescription.value" $CONSUL_FILE)
 IMAGE=$(jq ".results.bindings[${DAY}].image.value" $CONSUL_FILE)
 
+if [ -n "$JUST_NAME" ] ; then
+  echo $NAME
+  exit 0
+fi
+
 echo -n "The consul of the day is: "
 if [ -n "$USE_HTML" ] ; then
   echo -n "<a href=" $LINK ">"
