@@ -1,30 +1,35 @@
 from influxdb import line_protocol
 from influxdb_client import InfluxDBClient # 2.x
 from influxdb_client.client.write_api import SYNCHRONOUS, WritePrecision
+from pathlib import Path,PurePath
 import influxdb # 1.x
 import json
 import time
 import socket
+import sys
+
+config_dir = PurePath(Path.joinpath(Path.home(), ".fritzflux"))
+config_path = Path.joinpath(config_dir, "config.json")
 
 # uses parts of fritzflux (simply copied over what I need)
 DefaultFFConfig = {
-    "fb_address": "fritz.box",
-    "fb_user": "",
-    "fb_pass": "",
-    "influxdb_connections": [{
-        "address": "localhost",
-        "port": 8086,
-        "user": "root",
-        "pass": "root",
-        "database": ""
-        },
-        {
-        "url": "",
-        "token": "",
-        "org": "",
-        "bucket": ""
-    }],
-    "hostname": socket.gethostname()
+  "fb_address": "fritz.box",
+  "fb_user": "",
+  "fb_pass": "",
+  "influxdb_connections": [{
+    "address": "localhost",
+    "port": 8086,
+    "user": "root",
+    "pass": "root",
+    "database": ""
+    },
+    {
+    "url": "",
+    "token": "",
+    "org": "",
+    "bucket": ""
+  }],
+  "hostname": socket.gethostname()
 }
 
 def is_influx2_db(c):
@@ -35,30 +40,25 @@ class CoffeeFlux:
     self.ic = []
     for iconfig in ff_config["influxdb_connections"]:
       if is_influx2_db(iconfig):
-        self.ic.append(InfluxDBClient(
-            url=iconfig["url"], token=iconfig["token"]))
+        self.ic.append(InfluxDBClient(url=iconfig["url"], token=iconfig["token"]))
       else:
         self.ic.append(influxdb.InfluxDBClient(host=iconfig["address"], port=iconfig["port"],
                                                username=iconfig["user"], password=iconfig["pass"], database=iconfig["database"]))
     self.config = ff_config
 
-  def push(self):
+  def push(self, consul_name):
     json_body = {
-        "tags": {
-            "sender": "coffeebot",
-            "hostname": self.config["hostname"]
-        },
-        "points": []
+      "tags": {
+        "sender": "coffeebot",
+        "hostname": self.config["hostname"]
+      },
+      "points": []
     }
 
     t = int(time.time())
 
     f_status = {
-        "uptime": (self.fs.uptime, "seconds"),
-        "bytes_received": (self.fs.bytes_received, "bytes"),
-        "bytes_sent": (self.fs.bytes_sent, "bytes"),
-        "transmission_rate_up": (self.fs.transmission_rate[0], "bps"),
-        "transmission_rate_down": (self.fs.transmission_rate[1], "bps")
+      "consul": (consul_name, "name"),
     }
 
     for name, (v, f) in f_status.items():
@@ -81,4 +81,23 @@ class CoffeeFlux:
                 iconfig["database"], "on host", iconfig["address"])
       except Exception as e:
         print("Failed to write to connection:", iconfig, "Error:", e)
+
+def read_config():
+  config = {}
+  with open(str(config_path), 'r') as config_file:
+    config = json.load(config_file)
+
+  keys_not_in_config = DefaultFFConfig.keys()-config.keys()
+  if len(keys_not_in_config)>0:
+    print("Please set following keys in config: ", keys_not_in_config)
+    sys.exit(0)
+  return config
+
+if __name__ == '__main__':
+  if(len(sys.argv)==1):
+    print("usage %s <consul_name>"%sys.argv[0])
+    sys.exit(1)
+  ffc = read_config()
+  ff=CoffeeFlux(ffc)
+  ff.push(sys.argv[1])
 
