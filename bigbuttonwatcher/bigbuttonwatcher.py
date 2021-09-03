@@ -20,7 +20,7 @@ def findButton():
         return dev
   return None
 
-def state_change(last,new):
+def stateChange(last,new):
   try:
     if new==ButtonState.PRESSED:
       print("Button pressed")
@@ -34,7 +34,7 @@ def state_change(last,new):
   except Exception as e:
     print("Executing script failed: ",e)
 
-def main():
+def usbButton():
   dev = findButton()
   if dev == None:
     print("Cannot find panic button device")
@@ -61,7 +61,7 @@ def main():
     try:
       result = handle.interruptRead(endpoint.address, endpoint.maxPacketSize)
       if result[0]!=last_event:
-        state_change(ButtonState(last_event), ButtonState(result[0]))
+        stateChange(ButtonState(last_event), ButtonState(result[0]))
         last_event = result[0]
       time.sleep(endpoint.interval / float(1000))
     except Exception as e:
@@ -69,5 +69,17 @@ def main():
 
   handle.releaseInterface()
 
+def serialButton():
+  ser = serial.Serial('/dev/ttyUSB0',115200)
+
+  while True:
+    line = ser.readline()
+    if line == "PRESS":
+      stateChange(ButtonState.UNDEF,ButtonState.PRESSED)
+      #TODO: make sure this isn't triggered multiple times in a row
+
 if __name__ == "__main__":
-    main()
+  if len(sys.argv) == 1:
+    usbButton()
+  else
+    serialButton()
