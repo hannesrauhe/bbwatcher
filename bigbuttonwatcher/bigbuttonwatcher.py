@@ -45,6 +45,7 @@ class ButtonState(Enum):
   LID_UP=23
 
 def findButton():
+  import usb
   for bus in usb.busses():
     for dev in bus.devices:
       if dev.idVendor == idVendor and dev.idProduct == idProduct:
