@@ -6,9 +6,11 @@ if [ -f $DIR/env ] ; then
   source "$DIR/env"
 fi
 
-killall mplayer
-blink1-tool --rgb FF9900 -l1
-mplayer -cache-min 40 -playlist http://streaming.radio.co/s774887f7b/listen.m3u -really-quiet > /dev/null 2> /dev/null < /dev/null &
+if [ -n "${RADIO-}" ] ; then
+  killall mplayer
+  blink1-tool --rgb FF9900 -l1
+  mplayer -cache-min 40 -playlist http://streaming.radio.co/s774887f7b/listen.m3u -really-quiet > /dev/null 2> /dev/null < /dev/null &
+fi
 
 MSG="It's coffee time. $($DIR/consuloftheday/query.sh)"
 if [ $(date +%H) -ge "8" ] && [ $(date +%H) -lt "10" ] ; then
@@ -16,6 +18,8 @@ if [ $(date +%H) -ge "8" ] && [ $(date +%H) -lt "10" ] ; then
   $DIR/coffeebot/notify_slack.sh "$MSG"
 fi
 
-export JUST_NAME=1
-NAME="$($DIR/consuloftheday/query.sh)"
-sudo -u pi python3 $DIR/coffeebot/notify_influx.py "$NAME"
+if [ -n "${INFLUX-}" ]; then
+  export JUST_NAME=1
+  NAME="$($DIR/consuloftheday/query.sh)"
+  sudo -u pi python3 $DIR/coffeebot/notify_influx.py "$NAME"
+fi
