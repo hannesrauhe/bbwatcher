@@ -4,3 +4,4 @@ killall mplayer
 killall bluealsa-aplay
 blink1-tool --off -l1
 rfkill block bluetooth
+systemctl stop shairport-sync
