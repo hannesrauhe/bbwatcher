@@ -1,11 +1,42 @@
 #!/usr/bin/python3
 
-import usb,sys,time,subprocess
+import sys,time,subprocess,json
 from enum import Enum
+from pathlib import Path,PurePath
 
+
+# usb panic button settings -> move to config at some point
 idVendor = 0x1d34
 idProduct = 0x000d
 scriptDir = "/etc/bbwatcher/events"
+config_dir = PurePath("/etc/bbwatcher")
+config_path = Path.joinpath(config_dir, "config.json")
+
+DefaultBBWConfig = {
+    "button_type": "usb",
+}
+
+def create_config(config_dict={}, extend=False):
+    if not Path(config_path).exists() or extend:
+        if not Path(config_dir).is_dir():
+            Path(config_dir).mkdir()
+        config_file = open(str(config_path), 'w')
+        json.dump({**DefaultBBWConfig,**config_dict}, config_file, indent=2)
+        print("Created config file at %s. Please set values and restart."%config_path)
+        sys.exit(0)
+
+def read_config():
+    create_config()
+    config = {}
+    with open(str(config_path), 'r') as config_file:
+        config = json.load(config_file)
+
+    keys_not_in_config = DefaultBBWConfig.keys()-config.keys()
+    if len(keys_not_in_config)>0:
+        print("Please set following keys in config: ", keys_not_in_config)
+        create_config(config, True)
+    return config
+
 
 class ButtonState(Enum):
   UNDEF=0
@@ -35,6 +66,7 @@ def stateChange(last,new):
     print("Executing script failed: ",e)
 
 def usbButton():
+  import usb
   dev = findButton()
   if dev == None:
     print("Cannot find panic button device")
@@ -70,16 +102,25 @@ def usbButton():
   handle.releaseInterface()
 
 def serialButton():
+  import serial
   ser = serial.Serial('/dev/ttyUSB0',115200)
 
+  last_time = time.time()
   while True:
     line = ser.readline()
-    if line == "PRESS":
+    if(last_time+1>time.time()):
+      # triggered only once per second
+      continue
+    # if line:
+    #   print(line.decode(encoding="utf-8"))
+
+    if line.startswith(b"PRESS"):
+      last_time=time.time()
       stateChange(ButtonState.UNDEF,ButtonState.PRESSED)
-      #TODO: make sure this isn't triggered multiple times in a row
 
 if __name__ == "__main__":
-  if len(sys.argv) == 1:
-    usbButton()
-  else
+  bbc = read_config()
+  if bbc["button_type"]=="serial":
     serialButton()
+  else:
+    usbButton()
