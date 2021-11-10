@@ -13,8 +13,8 @@ if [ -n "${RADIO-}" ] ; then
 fi
 
 MSG="It's coffee time. $($DIR/consuloftheday/query.sh)"
+echo $MSG
 if [ $(date +%H) -ge "8" ] && [ $(date +%H) -lt "10" ] ; then
-  echo $MSG
   $DIR/coffeebot/notify_slack.sh "$MSG"
 fi
 
